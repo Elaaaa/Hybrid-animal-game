@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Animal Detective</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Kalam:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-kalam {
+            font-family: 'Kalam', cursive;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .btn {
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .input-field {
+            border-width: 2px;
+            border-color: #D1D5DB;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #4F46E5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            outline: none;
+        }
+        .feedback-correct {
+            color: #16A34A;
+            font-weight: 600;
+        }
+        .feedback-incorrect {
+            color: #DC2626;
+            font-weight: 600;
+        }
+        .question-option {
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .question-option:hover {
+            border-color: #4F46E5;
+        }
+        .question-option.selected {
+            background-color: #EEF2FF;
+            border-color: #4F46E5;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 4px solid #4F46E5;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .heart-icon {
+            fill: #ef4444; /* red-500 */
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .heart-icon.lost {
+            transform: scale(0);
+            opacity: 0;
+        }
+        #image-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div id="game-container" class="w-full max-w-4xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 font-kalam">Hybrid Animal Detective</h1>
+            <p class="text-gray-600 mt-2 text-lg">Can you identify the amazing animal mashups?</p>
+        </div>
+
+        <div id="start-screen" class="text-center">
+            <button id="start-game-btn" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg">
+                Start Detective Work!
+            </button>
+        </div>
+
+        <div id="main-game" class="hidden">
+            <div class="card p-6 md:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div id="image-container">
+                        <img id="hybrid-image" src="" alt="Hybrid Animal" class="hidden rounded-lg shadow-lg w-full h-full object-cover">
+                        <div id="image-loader" class="text-center">
+                            <div class="loader"></div>
+                            <p class="mt-3 font-semibold text-gray-600">Creating a new creature...</p>
+                        </div>
+                    </div>
+                    <div id="identification-section">
+                        <div class="flex justify-between items-center mb-4">
+                             <h2 class="text-2xl font-bold text-gray-800">What's This Creature?</h2>
+                             <div id="guesses-container" class="flex space-x-1">
+                                <!-- Heart icons for identification will be inserted here -->
+                             </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="animal1" class="block text-sm font-medium text-gray-700 mb-1">Animal 1 Name:</label>
+                                <input type="text" id="animal1" class="input-field w-full p-2 rounded-md" placeholder="e.g., Lion">
+                            </div>
+                            <div>
+                                <label for="feature1" class="block text-sm font-medium text-gray-700 mb-1">Identifying Feature:</label>
+                                <input type="text" id="feature1" class="input-field w-full p-2 rounded-md" placeholder="e.g., Has a mane">
+                            </div>
+                            <hr class="my-4">
+                            <div>
+                                <label for="animal2" class="block text-sm font-medium text-gray-700 mb-1">Animal 2 Name:</label>
+                                <input type="text" id="animal2" class="input-field w-full p-2 rounded-md" placeholder="e.g., Tiger">
+                            </div>
+                            <div>
+                                <label for="feature2" class="block text-sm font-medium text-gray-700 mb-1">Identifying Feature:</label>
+                                <input type="text" id="feature2" class="input-field w-full p-2 rounded-md" placeholder="e.g., Has stripes">
+                            </div>
+                        </div>
+                        <button id="submit-identification-btn" class="btn mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-lg">Check My Answer</button>
+                        <p id="identification-feedback" class="mt-4 text-center h-12"></p>
+                    </div>
+                    <div id="question-section" class="hidden lg:col-span-2">
+                         <!-- Questions will be dynamically inserted here -->
+                    </div>
+                </div>
+                 <div id="fun-fact-section" class="hidden mt-6 text-center">
+                    <button id="fun-fact-btn" class="btn bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-6 rounded-full">✨ Tell Me a Fun Fact!</button>
+                    <div id="fun-fact-display" class="mt-4 p-4 bg-amber-50 rounded-lg text-amber-800 font-semibold hidden"></div>
+                </div>
+            </div>
+            <div class="text-center mt-6">
+                <button id="next-animal-btn" class="btn hidden bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full">Next Creature</button>
+            </div>
+        </div>
+        
+        <div id="end-screen" class="hidden text-center">
+             <div class="card p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4 font-kalam">Great Detective Work!</h2>
+                <p class="text-xl text-gray-700 mb-2">You've investigated all the mysterious creatures.</p>
+                <p class="text-2xl font-bold text-indigo-600 mb-6">Final Score: <span id="final-score">0</span></p>
+                <button id="restart-game-btn" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- NEW: Huge list of animals for dynamic pairing ---
+        const animalLibrary = [
+            'Aardvark', 'Albatross', 'Alligator', 'Alpaca', 'Ant', 'Anteater', 'Antelope', 'Ape', 'Armadillo', 'Axolotl',
+            'Baboon', 'Badger', 'Barracuda', 'Bat', 'Bear', 'Beaver', 'Bee', 'Beetle', 'Bison', 'Blobfish', 'Blue Jay', 'Boar', 'Bobcat', 'Buffalo', 'Butterfly',
+            'Camel', 'Capybara', 'Caribou', 'Cassowary', 'Cat', 'Caterpillar', 'Cattle', 'Chameleon', 'Cheetah', 'Chicken', 'Chimpanzee', 'Chinchilla', 'Clam', 'Cobra', 'Cockroach', 'Cod', 'Coyote', 'Crab', 'Crane', 'Crocodile', 'Crow',
+            'Deer', 'Dingo', 'Dinosaur', 'Dog', 'Dolphin', 'Donkey', 'Dove', 'Dragonfly', 'Duck', 'Dugong',
+            'Eagle', 'Echidna', 'Eel', 'Elephant', 'Elk', 'Emu',
+            'Falcon', 'Ferret', 'Finch', 'Fish', 'Flamingo', 'Fly', 'Fox', 'Frog',
+            'Gazelle', 'Gecko', 'Gerbil', 'Gibbon', 'Giraffe', 'Gnat', 'Gnu', 'Goat', 'Goldfish', 'Goose', 'Gorilla', 'Goshawk', 'Grasshopper', 'Grouse', 'Guanaco', 'Guinea Pig', 'Gull',
+            'Hamster', 'Hare', 'Hawk', 'Hedgehog', 'Heron', 'Herring', 'Hippopotamus', 'Hornet', 'Horse', 'Human', 'Hummingbird', 'Hyena',
+            'Ibex', 'Ibis', 'Iguana',
+            'Jackal', 'Jaguar', 'Jellyfish',
+            'Kangaroo', 'Kingfisher', 'Koala', 'Komodo Dragon', 'Kookaburra',
+            'Ladybug', 'Lapwing', 'Lark', 'Lemur', 'Leopard', 'Lion', 'Llama', 'Lobster', 'Locust', 'Loris', 'Louse', 'Lyrebird',
+            'Magpie', 'Mallard', 'Mammoth', 'Manatee', 'Mandrill', 'Mantis', 'Marten', 'Meerkat', 'Mink', 'Mole', 'Mongoose', 'Monkey', 'Moose', 'Mosquito', 'Moth', 'Mouse', 'Mule',
+            'Narwhal', 'Newt', 'Nightingale',
+            'Octopus', 'Okapi', 'Opossum', 'Orangutan', 'Oryx', 'Ostrich', 'Otter', 'Owl', 'Oyster',
+            'Panther', 'Parrot', 'Partridge', 'Peacock', 'Pelican', 'Penguin', 'Pheasant', 'Pig', 'Pigeon', 'Platypus', 'Pony', 'Porcupine', 'Porpoise', 'Prairie Dog', 'Puma',
+            'Quail', 'Quelea', 'Quetzal',
+            'Rabbit', 'Raccoon', 'Rail', 'Ram', 'Rat', 'Raven', 'Red Deer', 'Red Panda', 'Reindeer', 'Rhinoceros',
+            'Saber-toothed tiger', 'Salamander', 'Salmon', 'Sand Dollar', 'Sandpiper', 'Sardine', 'Scorpion', 'Sea Lion', 'Sea Urchin', 'Seahorse', 'Seal', 'Shark', 'Sheep', 'Shrew', 'Skunk', 'Snail', 'Snake', 'Sparrow', 'Spider', 'Sponge', 'Squid', 'Squirrel', 'Starling', 'Stegosaurus', 'Stingray', 'Stinkbug', 'Stork', 'Swallow', 'Swan',
+            'Tapir', 'Tarsier', 'Termite', 'Tiger', 'Toad', 'T-Rex', 'Trout', 'Turkey', 'Turtle',
+            'Viper', 'Vulture',
+            'Wallaby', 'Walrus', 'Wasp', 'Weasel', 'Whale', 'Wildcat', 'Wolf', 'Wolverine', 'Wombat', 'Woodcock', 'Woodpecker', 'Worm', 'Wren',
+            'Yak',
+            'Zebra'
+        ];
+
+        const staticQuestions = [
+            { type: 'text', question: "This hybrid is a mix of which two animals?" },
+            { type: 'text', question: "What feature helped you identify one of the animals?" }
+        ];
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const mainGame = document.getElementById('main-game');
+        const endScreen = document.getElementById('end-screen');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        const hybridImage = document.getElementById('hybrid-image');
+        const imageLoader = document.getElementById('image-loader');
+        const animal1Input = document.getElementById('animal1');
+        const feature1Input = document.getElementById('feature1');
+        const animal2Input = document.getElementById('animal2');
+        const feature2Input = document.getElementById('feature2');
+        const submitIdentificationBtn = document.getElementById('submit-identification-btn');
+        const identificationFeedback = document.getElementById('identification-feedback');
+        const identificationSection = document.getElementById('identification-section');
+        const questionSection = document.getElementById('question-section');
+        const nextAnimalBtn = document.getElementById('next-animal-btn');
+        const finalScoreEl = document.getElementById('final-score');
+        const funFactSection = document.getElementById('fun-fact-section');
+        const funFactBtn = document.getElementById('fun-fact-btn');
+        const funFactDisplay = document.getElementById('fun-fact-display');
+        const guessesContainer = document.getElementById('guesses-container');
+
+        // Game State
+        let currentAnimalPair = [];
+        let score = 0;
+        let currentQuestionIndex = 0;
+        let identifiedAnimals = [];
+        let identificationGuessesLeft = 3;
+        let questionGuessesLeft = 3;
+        
+        const heartSVG = `<svg class="heart-icon w-8 h-8" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path></svg>`;
+
+        function startGame() {
+            startScreen.classList.add('hidden');
+            endScreen.classList.add('hidden');
+            mainGame.classList.remove('hidden');
+            score = 0;
+            loadAnimal();
+        }
+
+        async function loadAnimal() {
+            // Reset UI for the new animal
+            hybridImage.classList.add('hidden');
+            imageLoader.classList.remove('hidden');
+            identificationSection.classList.remove('hidden');
+            questionSection.classList.add('hidden');
+            questionSection.innerHTML = '';
+            funFactSection.classList.add('hidden');
+            funFactDisplay.classList.add('hidden');
+            funFactDisplay.innerHTML = '';
+            funFactBtn.innerHTML = '✨ Tell Me a Fun Fact!';
+            funFactBtn.disabled = false;
+            nextAnimalBtn.classList.add('hidden');
+            [animal1Input, feature1Input, animal2Input, feature2Input].forEach(input => {
+                input.value = '';
+                input.disabled = false;
+            });
+            submitIdentificationBtn.disabled = false;
+            identificationFeedback.textContent = '';
+            
+            identificationGuessesLeft = 3;
+            updateGuessIcons(guessesContainer, identificationGuessesLeft);
+
+            // --- NEW: Dynamically create a pair from the library ---
+            let index1 = Math.floor(Math.random() * animalLibrary.length);
+            let index2 = Math.floor(Math.random() * animalLibrary.length);
+            while (index1 === index2) { // Ensure two different animals
+                index2 = Math.floor(Math.random() * animalLibrary.length);
+            }
+            currentAnimalPair = [animalLibrary[index1], animalLibrary[index2]];
+
+            try {
+                const imageUrl = await generateHybridImage(currentAnimalPair[0], currentAnimalPair[1]);
+                hybridImage.src = imageUrl;
+                hybridImage.classList.remove('hidden');
+            } catch (error) {
+                console.error("Image generation failed permanently:", error);
+                hybridImage.src = `https://placehold.co/600x600/eee/ccc?text=Image+Creation+Error`;
+                hybridImage.classList.remove('hidden');
+                identificationFeedback.textContent = 'Could not create an image. Please skip.';
+                nextAnimalBtn.classList.remove('hidden');
+                submitIdentificationBtn.disabled = true;
+            } finally {
+                imageLoader.classList.add('hidden');
+            }
+        }
+        
+        async function generateHybridImage(animal1, animal2) {
+            const prompt = `A high-quality, photorealistic, surreal digital art of a hybrid animal that is a mix of a ${animal1} and a ${animal2}. The animal should be centered in the frame on a plain, light-colored background.`;
+            const payload = { instances: [{ prompt }], parameters: { "sampleCount": 1 } };
+            const apiKey = ""; // Leave empty
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+            
+            let lastError = null;
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error (${response.status}): ${response.statusText}`);
+                    const result = await response.json();
+                    if (result.predictions && result.predictions[0].bytesBase64Encoded) {
+                        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    } else {
+                         throw new Error("No image data in API response.");
+                    }
+                } catch (error) {
+                    console.error(`Image generation attempt ${attempt} failed:`, error);
+                    lastError = error;
+                    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+            throw lastError;
+        }
+        
+        function updateGuessIcons(container, guesses) {
+            container.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const heartEl = document.createElement('div');
+                heartEl.innerHTML = heartSVG;
+                if (i >= guesses) {
+                    heartEl.querySelector('.heart-icon').classList.add('lost');
+                }
+                container.appendChild(heartEl);
+            }
+        }
+
+        function checkIdentification() {
+            const userAnimal1 = animal1Input.value.trim().toLowerCase().replace("-", " ");
+            const userAnimal2 = animal2Input.value.trim().toLowerCase().replace("-", " ");
+            const userFeature1 = feature1Input.value.trim();
+            const userFeature2 = feature2Input.value.trim();
+
+            if (!userAnimal1 || !userAnimal2 || !userFeature1 || !userFeature2) {
+                identificationFeedback.textContent = "Please fill in all four fields!";
+                identificationFeedback.className = 'mt-4 text-center feedback-incorrect h-12';
+                return;
+            }
+
+            const correctAnimals = currentAnimalPair.map(a => a.toLowerCase().replace("-", " "));
+            const isCorrect = (correctAnimals.includes(userAnimal1) && correctAnimals.includes(userAnimal2) && userAnimal1 !== userAnimal2);
+
+            if (isCorrect) {
+                identificationFeedback.textContent = "Correct! You've identified the animals. Now for a few questions...";
+                identificationFeedback.className = 'mt-4 text-center feedback-correct h-12';
+                score += 10;
+                identifiedAnimals = currentAnimalPair; // Use original names for prompts
+                submitIdentificationBtn.disabled = true;
+                setTimeout(() => {
+                    identificationSection.classList.add('hidden');
+                    questionSection.classList.remove('hidden');
+                    loadQuestions();
+                }, 2000);
+            } else {
+                identificationGuessesLeft--;
+                updateGuessIcons(guessesContainer, identificationGuessesLeft);
+                if (identificationGuessesLeft > 0) {
+                    identificationFeedback.textContent = `Not quite. You have ${identificationGuessesLeft} guess(es) left.`;
+                    identificationFeedback.className = 'mt-4 text-center feedback-incorrect h-12';
+                } else {
+                    handleOutOfGuesses();
+                }
+            }
+        }
+        
+        function handleOutOfGuesses() {
+            const correct = currentAnimalPair;
+            identificationFeedback.innerHTML = `Out of guesses! The correct animals were <br><strong>${correct[0]}</strong> and <strong>${correct[1]}</strong>.`;
+            identificationFeedback.className = 'mt-4 text-center feedback-incorrect h-12';
+            [animal1Input, feature1Input, animal2Input, feature2Input, submitIdentificationBtn].forEach(el => el.disabled = true);
+            nextAnimalBtn.classList.remove('hidden');
+        }
+        
+        function loadQuestions() {
+            currentQuestionIndex = 0;
+            displayQuestion(currentQuestionIndex);
+        }
+
+        function displayQuestion(qIndex, dynamicQuestionData = null) {
+            questionSection.innerHTML = '';
+            questionGuessesLeft = 3; 
+            
+            const questionContainer = document.createElement('div');
+            questionContainer.className = 'p-4 bg-indigo-50 rounded-lg';
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'flex justify-between items-center mb-4';
+            
+            const questionText = document.createElement('p');
+            questionText.className = 'text-lg font-semibold text-gray-800';
+            
+            const questionGuessesDiv = document.createElement('div');
+            questionGuessesDiv.className = 'flex space-x-1';
+            
+            headerDiv.appendChild(questionText);
+            headerDiv.appendChild(questionGuessesDiv);
+            questionContainer.appendChild(headerDiv);
+
+            updateGuessIcons(questionGuessesDiv, questionGuessesLeft);
+
+            let questionData;
+            if (dynamicQuestionData) {
+                questionData = dynamicQuestionData;
+                questionText.textContent = `Question 3: ${questionData.question}`;
+            } else {
+                questionData = staticQuestions[qIndex];
+                questionText.textContent = `Question ${qIndex + 1}: ${questionData.question}`;
+            }
+
+            if (questionData.type === 'mcq') {
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'space-y-3';
+                questionData.options.forEach(option => {
+                    const optionEl = document.createElement('div');
+                    optionEl.className = 'question-option p-3 bg-white rounded-lg border-2 border-gray-200';
+                    optionEl.textContent = option;
+                    optionEl.onclick = () => selectOption(optionEl, optionsContainer);
+                    optionsContainer.appendChild(optionEl);
+                });
+                questionContainer.appendChild(optionsContainer);
+            } else {
+                const answerInput = document.createElement('input');
+                answerInput.type = 'text';
+                answerInput.className = 'input-field w-full p-2 rounded-md';
+                answerInput.placeholder = qIndex === 0 ? "Animal 1, Animal 2" : "A feature you noticed";
+                questionContainer.appendChild(answerInput);
+            }
+
+            const submitBtn = document.createElement('button');
+            submitBtn.textContent = 'Submit Answer';
+            submitBtn.className = 'btn mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg';
+            submitBtn.onclick = () => checkQuestionAnswer(qIndex, questionData);
+            
+            const feedbackEl = document.createElement('p');
+            feedbackEl.className = 'mt-3 text-center font-semibold h-10 flex items-center justify-center';
+            
+            questionContainer.appendChild(submitBtn);
+            questionContainer.appendChild(feedbackEl);
+            questionSection.appendChild(questionContainer);
+        }
+
+        function selectOption(selectedEl, container) {
+            container.querySelectorAll('.question-option').forEach(opt => opt.classList.remove('selected'));
+            selectedEl.classList.add('selected');
+        }
+
+        async function checkQuestionAnswer(qIndex, questionData) {
+            const questionContainer = questionSection.querySelector('div');
+            const feedbackEl = questionContainer.querySelector('p:last-child');
+            const questionGuessesDiv = questionContainer.querySelector('.flex.space-x-1');
+            let isAnswerCorrect = false;
+
+            if (questionData.type === 'mcq') {
+                const selectedOption = questionContainer.querySelector('.question-option.selected');
+                if (selectedOption && selectedOption.textContent === questionData.correctAnswer) isAnswerCorrect = true;
+            } else {
+                const input = questionContainer.querySelector('input');
+                const userAnswer = input.value.trim().toLowerCase();
+                if (qIndex === 0) {
+                    const userAnswers = userAnswer.split(',').map(s => s.trim().replace("-", " "));
+                    const correctAnswers = identifiedAnimals.map(a => a.toLowerCase().replace("-", " "));
+                    if (userAnswers.length === 2 && correctAnswers.includes(userAnswers[0]) && correctAnswers.includes(userAnswers[1])) isAnswerCorrect = true;
+                } else if (qIndex === 1) {
+                    if (userAnswer.length > 3) isAnswerCorrect = true;
+                }
+            }
+
+            if (isAnswerCorrect) {
+                feedbackEl.textContent = 'Correct!';
+                feedbackEl.className = 'mt-3 text-center font-semibold h-10 flex items-center justify-center feedback-correct';
+                score += 5;
+                questionContainer.querySelector('button').disabled = true;
+                proceedToNextQuestion();
+            } else {
+                questionGuessesLeft--;
+                updateGuessIcons(questionGuessesDiv, questionGuessesLeft);
+                if (questionGuessesLeft > 0) {
+                    feedbackEl.textContent = `Incorrect. You have ${questionGuessesLeft} guess(es) left.`;
+                    feedbackEl.className = 'mt-3 text-center font-semibold h-10 flex items-center justify-center feedback-incorrect';
+                } else {
+                    feedbackEl.textContent = 'Incorrect. Out of guesses!';
+                    if(questionData.type === 'mcq') feedbackEl.textContent += ` The correct answer was: ${questionData.correctAnswer}`;
+                    feedbackEl.className = 'mt-3 text-center font-semibold h-10 flex items-center justify-center feedback-incorrect';
+                    questionContainer.querySelector('button').disabled = true;
+                    proceedToNextQuestion();
+                }
+            }
+        }
+        
+        async function proceedToNextQuestion() {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            currentQuestionIndex++;
+            if (currentQuestionIndex < staticQuestions.length) {
+                displayQuestion(currentQuestionIndex);
+            } else if (currentQuestionIndex === staticQuestions.length) {
+                await fetchAndDisplayDynamicQuestion();
+            } else {
+                questionSection.querySelector('p:last-child').textContent = "Great job on this creature!";
+                nextAnimalBtn.classList.remove('hidden');
+                funFactSection.classList.remove('hidden');
+            }
+        }
+
+        async function fetchAndDisplayDynamicQuestion() {
+            questionSection.innerHTML = '<div class="text-center p-4"><p class="font-semibold mb-2">✨ Generating a special question...</p><div class="loader"></div></div>';
+            const prompt = `You are a 6th-grade science teacher in India. For a hybrid animal created from a ${identifiedAnimals[0]} and a ${identifiedAnimals[1]}, create one multiple-choice question based on the NCERT syllabus. The question should relate to the characteristics, habitat, or classification of one of the real animals. Provide the question, four options where one is correct, and the correct answer.`;
+            const payload = {
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                  type: "OBJECT",
+                  properties: {
+                    question: { "type": "STRING" },
+                    options: { type: "ARRAY", items: { type: "STRING" } },
+                    correctAnswer: { "type": "STRING" }
+                  },
+                  required: ["question", "options", "correctAnswer"]
+                }
+              }
+            };
+            
+            try {
+                const apiKey = ""; // Leave empty
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                const result = await response.json();
+                const dynamicQuestionData = JSON.parse(result.candidates[0].content.parts[0].text);
+                dynamicQuestionData.type = 'mcq';
+                displayQuestion(2, dynamicQuestionData);
+            } catch (error) {
+                console.error("Error fetching dynamic question:", error);
+                questionSection.innerHTML = '<p class="text-center text-red-500 font-semibold">Could not generate a question. Please try the next animal.</p>';
+                nextAnimalBtn.classList.remove('hidden');
+            }
+        }
+
+        async function getFunFact() {
+            funFactBtn.disabled = true;
+            funFactBtn.innerHTML = '<div class="loader !w-6 !h-6 !border-2 !border-white !border-t-transparent mx-auto"></div>';
+            funFactDisplay.classList.add('hidden');
+            const prompt = `Generate a surprising and fun fact for a 6th-grade student about a ${identifiedAnimals[0]} or a ${identifiedAnimals[1]}. Keep it to one or two sentences.`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+            try {
+                const apiKey = ""; // Leave empty
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                const result = await response.json();
+                funFactDisplay.textContent = result.candidates[0].content.parts[0].text;
+                funFactDisplay.classList.remove('hidden');
+            } catch (error) {
+                console.error("Error fetching fun fact:", error);
+                funFactDisplay.textContent = "Couldn't fetch a fun fact right now!";
+                funFactDisplay.classList.remove('hidden');
+            }
+        }
+
+        function nextAnimal() {
+            // --- FIX: Check if there are more animals to show ---
+            // This is technically endless now, but we can add a limit if desired.
+            // For now, it will just keep generating new pairs.
+            loadAnimal();
+        }
+
+        function showEndScreen() {
+            // This function might not be reached in the endless version,
+            // but is kept for potential future use (e.g., end game after 10 rounds).
+            mainGame.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalScoreEl.textContent = score;
+        }
+
+        // Event Listeners
+        startGameBtn.addEventListener('click', startGame);
+        restartGameBtn.addEventListener('click', startGame);
+        submitIdentificationBtn.addEventListener('click', checkIdentification);
+        nextAnimalBtn.addEventListener('click', nextAnimal);
+        funFactBtn.addEventListener('click', getFunFact);
+        
+        [animal1Input, feature1Input, animal2Input, feature2Input].forEach(input => {
+            input.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter') submitIdentificationBtn.click();
+            });
+        });
+
+    </script>
+</body>
+</html>
